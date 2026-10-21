@@ -27,7 +27,5 @@ public:
 	slave(fnWork doWorkk, std::queue<std::string> &taskQ, std::vector<html_urls> &results, std::condition_variable &cv,
 			std::mutex &urlMtx, std::mutex &resMtx);
 	~slave();
-
-
 };
 			
