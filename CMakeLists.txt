@@ -23,5 +23,5 @@ add_subdirectory(third_party/libxml2 EXCLUDE_FROM_ALL)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-add_executable(slavesPool src/main.cpp)
+add_executable(slavesPool src/main.cpp src/crawler.cpp src/slave.cpp src/utlis.cpp)
 target_link_libraries(slavesPool PRIVATE CURL::libcurl LibXml2::LibXml2)

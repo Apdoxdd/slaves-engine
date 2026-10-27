@@ -6,11 +6,11 @@
 crawler::crawler()
 	:slavesPool(20) 
 {
-	crawlerDBWrite.open("crawler.db", std::ios::app);
+	crawlerDBWrite.open("../crawler.db", std::ios::app);
 	if (!crawlerDBWrite.is_open())
 		throw std::runtime_error("Failed to open crawler DB for writing");
 
-	crawlerDBRead.open("crawler.db");
+	crawlerDBRead.open("../crawler.db");
 	if (!crawlerDBRead.is_open())
 		throw std::runtime_error("Failed to open crawler DB for reading");
 
@@ -81,5 +81,8 @@ void crawler::write_links_db()
 
 crawler::~crawler()
 {
-	
+
+	for(auto i {0uz}; i < 20; ++i)
+		delete slavesPool[i];
+
 }
