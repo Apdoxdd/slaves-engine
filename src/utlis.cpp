@@ -110,7 +110,12 @@ void utlis::slave_work(CURL *&handle,
 		cv.wait(lk, [&](){return !taskQ.empty(); });
 		std::string base_url = std::move(taskQ.front());
 		taskQ.pop();
+		bool drained = taskQ.empty();
 		lk.unlock();
+
+		if (drained)
+			cv.notify_all();
+
 		if (base_url.empty())
 			return;
 

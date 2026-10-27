@@ -15,8 +15,9 @@ private:
 	std::mutex extractedLinks_Mtx;
 	std::condition_variable cv;
 
-	std::fstream crawlerDB;
-	std::streampos CrawlerDB_pos;
+
+	std::ifstream crawlerDBRead;
+	std::ofstream crawlerDBWrite;
 
 public:
 	crawler();
