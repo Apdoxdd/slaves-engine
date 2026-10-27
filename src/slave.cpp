@@ -13,12 +13,7 @@ slave::slave(slave_work doWork,
 					worker(doWork, std::ref(handle), std::ref(taskQ), std::ref(taskMtx), std::ref(results), std::ref(resMtx), 
 							std::ref(extractedLinks), std::ref(extractedLinks_Mtx), std::ref(cv))
 
-{
-	if (!handle)
-	{
-		throw std::runtime_error("Failed to create handle");
-	}
-}
+{}
 
 slave::~slave()
 {

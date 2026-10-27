@@ -35,7 +35,7 @@ bool utlis::do_request(CURL *handle, std::string& base_url, std::string& respons
 
 }
 
-std::set<std::string> extract_links(std::string& base_url, std::string& response)
+std::set<std::string> utlis:: extract_links(std::string& base_url, std::string& response)
 {
     std::set<std::string> links;
     htmlDocPtr doc = htmlReadMemory(
