@@ -1,20 +1,30 @@
 #pragma once
 
 #include "slave.hpp"
+#include <fstream>
 
 class crawler 
 {
 private:
 	std::queue<std::string> taskQ;
+	std::mutex taskMtx;
 	std::vector<html_urls> results;
-	std::condition_variable cv;
-	std::mutex urlMutex;
-	std::mutex resMutex;
+	std::mutex resMtx;
 	std::vector<slave*> slavesPool;
+	std::vector<std::string> extractedLinks;
+	std::mutex extractedLinks_Mtx;
+	std::condition_variable cv;
+
+	std::fstream crawlerDB;
+	std::streampos CrawlerDB_pos;
+
 public:
 	crawler();
 	~crawler();
-	slave::fnWork doWork;
+	void crawl();
+	void get_links_db();
+	void write_links_db();
+
 };
 
 

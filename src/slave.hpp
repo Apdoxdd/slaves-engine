@@ -1,4 +1,5 @@
 #pragma once
+
 #include <curl/curl.h>
 #include <thread>
 #include <mutex>
@@ -19,13 +20,25 @@ private:
 	CURL *handle;
 	std::thread worker;
 public:
-	using fnWork = void (*)(CURL *handle,
-				std::queue<std::string>&,
-				std::vector<html_urls>&,
-				std::condition_variable&,
-				std::mutex&, std::mutex&);
-	slave(fnWork doWorkk, std::queue<std::string> &taskQ, std::vector<html_urls> &results, std::condition_variable &cv,
-			std::mutex &urlMtx, std::mutex &resMtx);
+	using slave_work = void (*)(CURL *handle,
+		std::queue<std::string>&,
+		std::mutex&,
+		std::vector<html_urls>&,
+		std::mutex&,
+		std::vector<std::string>&,
+		std::mutex&,
+		std::condition_variable&);
+
+	slave(slave_work slave_work, 
+		std::queue<std::string>& taskQ,
+		std::mutex& taskMtx,
+		std::vector<html_urls>& results,
+		std::mutex& resMtx,
+		std::vector<std::string>& extractedLinks,
+		std::mutex& extractedLinks_Mtx,
+		std::condition_variable& cv);
+
 	~slave();
+	friend class crawler;
 };
 			

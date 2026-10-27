@@ -1,17 +1,23 @@
 #include "slave.hpp"
 
-slave::slave(fnWork doWork, std::queue<std::string> &taskQ, std::vector<html_urls> &results, std::condition_variable &cv,
-			std::mutex &urlMtx, std::mutex &resMtx)
 			
-			: handle(curl_easy_init()),
-			  worker(doWork, handle, std::ref(taskQ), std::ref(results), std::ref(cv), std::ref(urlMtx), 
-			  		  std::ref(resMtx)) 
+slave::slave(slave_work doWork, 
+	std::queue<std::string>& taskQ,
+	std::mutex& taskMtx,
+	std::vector<html_urls>& results,
+	std::mutex& resMtx,
+	std::vector<std::string>& extractedLinks,
+	std::mutex& extractedLinks_Mtx,
+	std::condition_variable& cv)
+					:
+					worker(doWork, std::ref(handle), std::ref(taskQ), std::ref(taskMtx), std::ref(results), std::ref(resMtx), 
+							std::ref(extractedLinks), std::ref(extractedLinks_Mtx), std::ref(cv))
+
 {
 	if (!handle)
 	{
 		throw std::runtime_error("Failed to create handle");
 	}
-	curl_easy_setopt(this->handle, CURLOPT_SSL_OPTIONS, CURLSSLOPT_NATIVE_CA); 
 }
 
 slave::~slave()
