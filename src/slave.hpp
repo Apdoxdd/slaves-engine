@@ -17,10 +17,10 @@ struct html_urls
 class slave 
 {
 private:
-	CURL *handle;
+	CURL *handle = nullptr;
 	std::thread worker;
 public:
-	using slave_work = void (*)(CURL *handle,
+	using slave_work = void (*)(CURL *&handle,
 		std::queue<std::string>&,
 		std::mutex&,
 		std::vector<html_urls>&,

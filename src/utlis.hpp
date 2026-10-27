@@ -14,10 +14,10 @@
 
 namespace utlis 
 {
-	void setup_curl(CURL *handle, std::string& response);
+	void setup_curl(CURL *&handle, std::string& response);
 	bool do_request(CURL* handle, std::string& base_url, std::string& response);
-	std::set<std::string> extract_links(std::string& response);
-	void slave_work(CURL *handle,
+	std::set<std::string> extract_links(std::string& base_url, std::string& response);
+	void slave_work(CURL *&handle,
 		std::queue<std::string>&,
 		std::mutex&,
 		std::vector<html_urls>&,
