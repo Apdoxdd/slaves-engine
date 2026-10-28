@@ -1,4 +1,5 @@
 #include "utlis.hpp"
+#include <thread>
 
 void utlis::setup_curl(CURL *&handle, std::string& response)
 {
@@ -17,7 +18,7 @@ void utlis::setup_curl(CURL *&handle, std::string& response)
 	curl_easy_setopt(handle, CURLOPT_SSL_OPTIONS, CURLSSLOPT_NATIVE_CA); 
 	curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, +chunk_inc);
 	curl_easy_setopt(handle, CURLOPT_WRITEDATA, &response);
-	curl_easy_setopt(handle, CURLOPT_TIMEOUT, 300L); // setup 5 mins error
+	curl_easy_setopt(handle, CURLOPT_TIMEOUT, 5L); // setup 5 mins error
 	curl_easy_setopt(handle, CURLOPT_FAILONERROR, 1L); // fail on 400 requests
 	curl_easy_setopt(handle, CURLOPT_FOLLOWLOCATION, 1L);
 	curl_easy_setopt(handle, CURLOPT_MAXREDIRS, 10L);
@@ -104,6 +105,11 @@ void utlis::slave_work(CURL *&handle,
 {
 	std::string response {};
 	setup_curl(handle, response);
+	auto id = std::this_thread::get_id();
+        std::ostringstream oss;
+        oss << id;
+        std::string ID = oss.str();
+        size_t _id = std::hash<std::thread::id>{}(id) % 5;
 	while(true)
 	{
 		std::unique_lock<std::mutex> lk(taskMtx);
@@ -123,6 +129,8 @@ void utlis::slave_work(CURL *&handle,
 			continue;
 
 		utlis::count++;
+
+		std::cout<<"Count: "<<count<<" Thread ID: "<<_id<<std::endl;
 
 		std::set<std::string> links = extract_links(base_url, response);
 		html_urls urls_html {base_url, std::move(response)};
