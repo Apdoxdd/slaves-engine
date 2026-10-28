@@ -73,8 +73,8 @@ void crawler::write_links_db()
 		links.swap(extractedLinks);   // take everything, keep the lock short
 	}
 		for (auto& link : links)
-	//	if (known.insert(link).second)    // true only if it wasn't there before
-			crawlerDBWrite << link << '\n';
+			if (seen.insert(link).second)    // true only if it wasn't there before
+				crawlerDBWrite << link << '\n';
 
 	crawlerDBWrite.flush();
 }

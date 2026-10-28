@@ -122,6 +122,8 @@ void utlis::slave_work(CURL *&handle,
 		if(!do_request(handle, base_url, response))
 			continue;
 
+		utlis::count++;
+
 		std::set<std::string> links = extract_links(base_url, response);
 		html_urls urls_html {base_url, std::move(response)};
 

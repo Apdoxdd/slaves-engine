@@ -2,6 +2,7 @@
 
 #include "slave.hpp"
 #include <fstream>
+#include <unordered_set>
 
 class crawler 
 {
@@ -14,6 +15,7 @@ private:
 	std::vector<std::string> extractedLinks;
 	std::mutex extractedLinks_Mtx;
 	std::condition_variable cv;
+	std::unordered_set<std::string> seen;
 
 
 	std::ifstream crawlerDBRead;
