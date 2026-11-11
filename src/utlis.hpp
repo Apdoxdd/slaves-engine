@@ -13,9 +13,12 @@
 #include <vector>
 #include <set>
 #include <atomic>
+#include <algorithm>
+#include <cstring>
 #include <iostream>
 #include <sstream>
 
+ //bool normalize_link(const CURLU *base, std::string href, std::string& out);
 namespace utlis 
 {
 	inline std::atomic<unsigned int> count {0};
