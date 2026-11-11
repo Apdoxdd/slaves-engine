@@ -18,6 +18,7 @@ void utlis::setup_curl(CURL *&handle, std::string& response)
 	curl_easy_setopt(handle, CURLOPT_SSL_OPTIONS, CURLSSLOPT_NATIVE_CA); 
 	curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, +chunk_inc);
 	curl_easy_setopt(handle, CURLOPT_WRITEDATA, &response);
+	curl_easy_setopt(handle, CURLOPT_USERAGENT, "MyCrawler/1.0");
 	curl_easy_setopt(handle, CURLOPT_TIMEOUT, 5L); // setup 5 secs error
 	curl_easy_setopt(handle, CURLOPT_FAILONERROR, 1L); // fail on 400 requests
 	curl_easy_setopt(handle, CURLOPT_FOLLOWLOCATION, 1L);
