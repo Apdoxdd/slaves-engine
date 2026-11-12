@@ -2,7 +2,7 @@
 #include <stdexcept>
 #include <thread>
 
-void setup_multihandle(CURLM *shephard_handle, std::unordered_map<CURL *, utlis::sheep> sheep_map)
+void setup_multihandle(CURLM *&shephard_handle, std::unordered_map<CURL *, utlis::sheep>& sheep_map)
 {
 	shephard_handle = curl_multi_init();
     	if(!shephard_handle) 
@@ -13,6 +13,12 @@ void setup_multihandle(CURLM *shephard_handle, std::unordered_map<CURL *, utlis:
     	}
     	curl_multi_setopt(shephard_handle, CURLMOPT_MAX_TOTAL_CONNECTIONS, static_cast<long>(utlis::MAX_SHEEP));
 
+    	for (auto i {0}; i < utlis::MAX_SHEEP; ++i)
+    	{
+		utlis::sheep cur_sheep;
+		utlis::setup_easyhandle(cur_sheep.es_handle, cur_sheep.doc);
+		sheep_map[cur_sheep.es_handle] = cur_sheep;
+    	}
 }
 
 void utlis::setup_easyhandle(CURL *&handle, std::string& response)
