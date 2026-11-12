@@ -17,9 +17,13 @@ void utlis::setup_multihandle(CURLM *&shephard_handle, std::unordered_map<CURL *
 
     	for (auto i {0}; i < utlis::MAX_SHEEP; ++i)
     	{
-		utlis::sheep cur_sheep;
-		utlis::setup_easyhandle(cur_sheep.es_handle, cur_sheep.doc);
-		sheep_map[cur_sheep.es_handle] = cur_sheep;
+    		CURL *_es_handle;
+		std::string temp_doc;
+		utlis::setup_easyhandle(_es_handle, temp_doc);
+		auto &cur_sheep = sheep_map[_es_handle];
+		cur_sheep.es_handle = _es_handle;
+		cur_sheep.active = false;
+		curl_easy_setopt(_es_handle, CURLOPT_WRITEDATA, &cur_sheep.doc);
     	}
 }
 
@@ -320,7 +324,7 @@ void utlis::slave_work(CURLM *&shephard_handle,
 				finished_handle = message->easy_handle;
 				msg_code = message->data.result;
 
-				auto finished_sheep = sheep_map[finished_handle];
+				auto& finished_sheep = sheep_map[finished_handle];
 
 				if (msg_code == CURLE_OK)
 				{
