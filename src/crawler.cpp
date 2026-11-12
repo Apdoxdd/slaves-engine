@@ -19,7 +19,7 @@ crawler::crawler()
 		throw std::runtime_error("Failed to open crawler DB for reading");
 
 
-	for(auto i {0uz}; i < 20; ++i)
+	for(auto i {0uz}; i < slavesPool.size(); ++i)
 	{
 		slavesPool[i] = new slave(utlis::slave_work, taskQ,
 				taskMtx, results, resMtx,
