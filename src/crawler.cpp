@@ -62,7 +62,7 @@ void crawler::crawl()
 
 void crawler::get_links_db()
 {
-	constexpr size_t BATCH = 100;
+	constexpr size_t BATCH = 20'000;
 	crawlerDBRead.clear();
 
 	std::vector<std::string> batch;
@@ -102,7 +102,7 @@ void crawler::write_links_db()
 crawler::~crawler()
 {
 
-	for(auto i {0uz}; i < 20; ++i)
+	for(auto i {0uz}; i < slavesPool.size(); ++i)
 		delete slavesPool[i];
 
 }
