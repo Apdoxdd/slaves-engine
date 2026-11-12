@@ -277,11 +277,12 @@ void utlis::slave_work(CURLM *&shephard_handle,
 			local_taskQ.push(task_url);
 
 		}
+		lk.unlock();
 		bool drained = taskQ.empty();
 		if (drained)
 			cv.notify_all();
 
-		while (!local_taskQ.empty())
+		while (!local_taskQ.empty() || running_sheep > 0)
 		{
 			for (auto& [handle, cur_sheep] : sheep_map)
 			{
@@ -343,8 +344,6 @@ void utlis::slave_work(CURLM *&shephard_handle,
 
 			}
 
-			if (running_sheep == 0 && local_results.empty())
-				break;
 			
         		if(running_sheep > 0)
             		curl_multi_poll(shephard_handle, nullptr, 0, 1000, nullptr);
