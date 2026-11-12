@@ -366,6 +366,13 @@ void utlis::slave_work(CURLM *&shephard_handle,
 
 
 	}
+	 for (auto &[handle, sheep] : sheep_map)
+    	{
+        	if (sheep.active)
+            		curl_multi_remove_handle(shephard_handle, handle);
+
+        	curl_easy_cleanup(handle);
+    	}
 }
 
 
