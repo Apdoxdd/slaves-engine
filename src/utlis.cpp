@@ -309,14 +309,16 @@ void utlis::slave_work(CURLM *&shephard_handle,
 			CURLMsg *message {nullptr};
 
 
+			CURL *finished_handle {nullptr};
+			CURLcode msg_code;
 
 			while ((message = curl_multi_info_read(shephard_handle, &messagesLeft)))
 			{
 				if (message->msg != CURLMSG_DONE)
 					continue;
 
-				CURL *finished_handle = message->easy_handle;
-				CURLcode msg_code = message->data.result;
+				finished_handle = message->easy_handle;
+				msg_code = message->data.result;
 
 				auto finished_sheep = sheep_map[finished_handle];
 
@@ -329,12 +331,15 @@ void utlis::slave_work(CURLM *&shephard_handle,
 						local_results.push_back({finished_sheep.url, finished_sheep.doc});
 					}
 				}
+				curl_multi_remove_handle(shephard_handle, finished_handle);
 				finished_sheep.active = false;
-				finished_sheep.doc.clear();
 
 				
 
 			}
+
+			if (running_sheep == 0 && local_results.empty())
+				break;
 			
         		if(running_sheep > 0)
             		curl_multi_poll(shephard_handle, nullptr, 0, 1000, nullptr);

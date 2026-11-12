@@ -4,7 +4,7 @@
 #include <stdexcept>
 
 crawler::crawler()
-	:slavesPool(20) 
+	:slavesPool(std::thread::hardware_concurrency()) 
 {
 	if (curl_global_init(CURL_GLOBAL_DEFAULT) != CURLE_OK)
     	{
