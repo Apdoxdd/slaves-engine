@@ -30,8 +30,12 @@ crawler::crawler()
 
 void crawler::crawl()
 {
+	auto start = std::chrono::steady_clock::now();
+	auto next_print {1000};
+	auto batches {0};
 	while(true)
 	{
+
 		this->get_links_db();
 		cv.notify_all();
 		//make this thread sleep until taskQ is empty
@@ -40,7 +44,19 @@ void crawler::crawl()
 		lk.unlock();
 		
 		this->write_links_db();
-		
+
+		batches++;
+        	if (utlis::crawl_count >= next_print)
+        	{
+        		double mins = std::chrono::duration<double>(
+                          std::chrono::steady_clock::now() - start).count() / 60.0;
+        		std::cout << utlis::crawl_count / mins << " pages/min ("
+                  	<< utlis::crawl_count << " pages)(" << batches << ")\n";
+        
+        		next_print += 1000;
+       		 }
+
+
 	}
 }
 

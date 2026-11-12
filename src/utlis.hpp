@@ -25,6 +25,7 @@
 namespace utlis 
 {
 
+	inline std::atomic<unsigned int> crawl_count {0};
 	struct sheep 
 	{
 		std::string doc;

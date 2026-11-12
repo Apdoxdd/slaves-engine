@@ -4,7 +4,7 @@
 #include <thread>
 #include <unordered_map>
 
-void setup_multihandle(CURLM *&shephard_handle, std::unordered_map<CURL *, utlis::sheep>& sheep_map)
+void utlis::setup_multihandle(CURLM *&shephard_handle, std::unordered_map<CURL *, utlis::sheep>& sheep_map)
 {
 	shephard_handle = curl_multi_init();
     	if(!shephard_handle) 
@@ -266,7 +266,7 @@ void utlis::slave_work(CURLM *&shephard_handle,
 		local_extracted_links.clear();
 		std::unique_lock<std::mutex> lk(taskMtx);
 		cv.wait(lk, [&](){return !taskQ.empty(); });
-		for (auto i {0}; i < utlis::LOCAL_Q_SIZE; ++i)
+		for (auto i {0}; i < utlis::LOCAL_Q_SIZE && !taskQ.empty(); ++i)
 		{
 			std::string task_url = std::move(taskQ.front());
 			taskQ.pop();
@@ -328,6 +328,7 @@ void utlis::slave_work(CURLM *&shephard_handle,
 					curl_easy_getinfo(finished_handle, CURLINFO_RESPONSE_CODE, &httpStatus);
 					if (httpStatus >= 200 && httpStatus < 300)
 					{
+						crawl_count++;
 						local_results.push_back({finished_sheep.url, finished_sheep.doc});
 					}
 				}
