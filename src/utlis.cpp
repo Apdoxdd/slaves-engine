@@ -1,6 +1,8 @@
 #include "utlis.hpp"
+#include "curl/curl.h"
 #include <stdexcept>
 #include <thread>
+#include <unordered_map>
 
 void setup_multihandle(CURLM *&shephard_handle, std::unordered_map<CURL *, utlis::sheep>& sheep_map)
 {
@@ -186,9 +188,8 @@ static bool normalize_link(const CURLU *base, std::string href, std::string& out
 	
 }
 
-std::set<std::string> utlis:: extract_links(std::string& base_url, std::string& response)
+void utlis:: extract_links(std::string& base_url, std::string& response, std::set<std::string>& links)
 {
-    std::set<std::string> links;
     htmlDocPtr doc = htmlReadMemory(
         response.c_str(),
         response.size(),
@@ -198,7 +199,7 @@ std::set<std::string> utlis:: extract_links(std::string& base_url, std::string& 
 
     if (doc == nullptr)
     {
-        return links;
+        return;
     }
 
     xmlXPathContextPtr context = xmlXPathNewContext(doc);
@@ -206,7 +207,7 @@ std::set<std::string> utlis:: extract_links(std::string& base_url, std::string& 
     if (context == nullptr)
     {
         xmlFreeDoc(doc);
-        return links;
+        return;
     }
 
     xmlXPathObjectPtr result = xmlXPathEvalExpression(BAD_CAST "//a/@href", context);
@@ -240,10 +241,9 @@ std::set<std::string> utlis:: extract_links(std::string& base_url, std::string& 
     xmlXPathFreeContext(context);
     xmlFreeDoc(doc);
 
-    return links;
 }
 
-void utlis::slave_work(CURL *&handle,
+void utlis::slave_work(CURLM *&shephard_handle,
 		std::queue<std::string>& taskQ,
 		std::mutex& taskMtx,
 		std::vector<html_urls>& results,
@@ -252,58 +252,115 @@ void utlis::slave_work(CURL *&handle,
 		std::mutex& extractedLinks_Mtx,
 		std::condition_variable& cv)
 {
-	std::string response {};
-	setup_easyhandle(handle, response);
-	auto id = std::this_thread::get_id();
-        std::ostringstream oss;
-        oss << id;
-        std::string ID = oss.str();
-        size_t _id = std::hash<std::thread::id>{}(id) % 20;
+	std::unordered_map<CURL *, utlis::sheep> sheep_map;
+	setup_multihandle(shephard_handle, sheep_map);
+
+	std::queue<std::string> local_taskQ;
+	std::vector<html_urls> local_results;
+	std::set<std::string> local_extracted_links;
+	int running_sheep {0};
+
 	while(true)
 	{
+		local_results.clear();
+		local_extracted_links.clear();
 		std::unique_lock<std::mutex> lk(taskMtx);
 		cv.wait(lk, [&](){return !taskQ.empty(); });
-		std::string base_url = std::move(taskQ.front());
-		taskQ.pop();
-		bool drained = taskQ.empty();
-		lk.unlock();
+		for (auto i {0}; i < utlis::LOCAL_Q_SIZE; ++i)
+		{
+			std::string task_url = std::move(taskQ.front());
+			taskQ.pop();
+			local_taskQ.push(task_url);
 
+		}
+		bool drained = taskQ.empty();
 		if (drained)
 			cv.notify_all();
 
-		if (base_url.empty())
+		while (!local_taskQ.empty())
 		{
-			curl_easy_cleanup(handle);
-			handle = nullptr;
-			return;
+			for (auto& [handle, cur_sheep] : sheep_map)
+			{
+				if (local_taskQ.empty())
+					break;
+				if (cur_sheep.active)
+					continue;
+				cur_sheep.url = local_taskQ.front();
+				local_taskQ.pop();
+				cur_sheep.doc.clear();
+
+				CURLcode es_code = curl_easy_setopt(cur_sheep.es_handle, CURLOPT_URL, cur_sheep.url.c_str());
+				if (es_code != CURLE_OK)
+				{
+					std::cerr << "curl_easy_setopt failed for task " <<std::endl;
+					continue;
+				}
+				CURLMcode mul_code = curl_multi_add_handle(shephard_handle, cur_sheep.es_handle); 
+				if (mul_code != CURLM_OK)
+				{
+					std::cerr<<"curl_multi_add_handle failed for task"<<std::endl;
+					continue;
+				}
+				cur_sheep.active = true;
+			}
+			curl_multi_perform(shephard_handle, &running_sheep);
+
+			int messagesLeft {0};
+			CURLMsg *message {nullptr};
+
+
+
+			while ((message = curl_multi_info_read(shephard_handle, &messagesLeft)))
+			{
+				if (message->msg != CURLMSG_DONE)
+					continue;
+
+				CURL *finished_handle = message->easy_handle;
+				CURLcode msg_code = message->data.result;
+
+				auto finished_sheep = sheep_map[finished_handle];
+
+				if (msg_code == CURLE_OK)
+				{
+					long httpStatus {0};
+					curl_easy_getinfo(finished_handle, CURLINFO_RESPONSE_CODE, &httpStatus);
+					if (httpStatus >= 200 && httpStatus < 300)
+					{
+						local_results.push_back({finished_sheep.url, finished_sheep.doc});
+					}
+				}
+				finished_sheep.active = false;
+				finished_sheep.doc.clear();
+
+				
+
+			}
+			
+        		if(running_sheep > 0)
+            		curl_multi_poll(shephard_handle, nullptr, 0, 1000, nullptr);
+
 		}
 
-		if(!do_request(handle, base_url, response))
-			continue;
-
-		utlis::count++;
-
-//		std::cout<<"Count: "<<count<<" Thread ID: "<<_id<<std::endl;
-
-		char *eff {nullptr};
-		curl_easy_getinfo(handle, CURLINFO_EFFECTIVE_URL, &eff);
-		std::string final_url = eff? eff : base_url;
-		
-
-		std::set<std::string> links = extract_links(final_url, response);
-		html_urls urls_html {base_url, std::move(response)};
+		for (auto &doc : local_results)
+		{
+			extract_links(doc.url, doc.doc, local_extracted_links);
+		}
 
 		{
 			std::lock_guard<std::mutex> resLk(resMtx);
-			results.push_back(std::move(urls_html));
+			for ( auto &result : local_results)
+				results.push_back(std::move(result));
 		}
 
 		{
 			std::lock_guard<std::mutex> linkLk(extractedLinks_Mtx);
-			for (const auto &link : links)
+			for (auto &link : local_extracted_links)
 				extractedLinks.push_back(link);
-
 		}
+		
+
 
 	}
 }
+
+
