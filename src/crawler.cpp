@@ -6,6 +6,10 @@
 crawler::crawler()
 	:slavesPool(20) 
 {
+	if (curl_global_init(CURL_GLOBAL_DEFAULT) != CURLE_OK)
+    	{
+		throw::std::runtime_error("CURL global init failed");
+   	 }
 	crawlerDBWrite.open("../crawler.db", std::ios::app);
 	if (!crawlerDBWrite.is_open())
 		throw std::runtime_error("Failed to open crawler DB for writing");

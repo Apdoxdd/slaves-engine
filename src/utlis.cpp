@@ -1,7 +1,21 @@
 #include "utlis.hpp"
+#include <stdexcept>
 #include <thread>
 
-void utlis::setup_curl(CURL *&handle, std::string& response)
+void setup_multihandle(CURLM *shephard_handle, std::unordered_map<CURL *, utlis::sheep> sheep_map)
+{
+	shephard_handle = curl_multi_init();
+    	if(!shephard_handle) 
+    	{
+        	std::cerr << "curl_multi_init failed\n";
+        	curl_global_cleanup();
+		throw std::runtime_error("Failed to init multi handle");
+    	}
+    	curl_multi_setopt(shephard_handle, CURLMOPT_MAX_TOTAL_CONNECTIONS, static_cast<long>(utlis::MAX_SHEEP));
+
+}
+
+void utlis::setup_easyhandle(CURL *&handle, std::string& response)
 {
 	auto chunk_inc = [](char *chunk, size_t size, size_t nmemb, void *userp)
 	{
@@ -233,7 +247,7 @@ void utlis::slave_work(CURL *&handle,
 		std::condition_variable& cv)
 {
 	std::string response {};
-	setup_curl(handle, response);
+	setup_easyhandle(handle, response);
 	auto id = std::this_thread::get_id();
         std::ostringstream oss;
         oss << id;

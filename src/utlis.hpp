@@ -10,6 +10,7 @@
 #include <mutex>
 #include <queue>
 #include <string>
+#include <unordered_map>
 #include <vector>
 #include <set>
 #include <atomic>
@@ -17,15 +18,28 @@
 #include <cstring>
 #include <iostream>
 #include <sstream>
+#include <string>
+#include <unordered_map>
 
  //bool normalize_link(const CURLU *base, std::string href, std::string& out);
 namespace utlis 
 {
+
+	struct sheep 
+	{
+		std::string doc;
+		std::string url;
+		CURL *es_handle;
+		bool active;
+	};
+	constexpr int MAX_SHEEP = 200;
+
 	inline std::atomic<unsigned int> count {0};
-	void setup_curl(CURL *&handle, std::string& response);
+	void setup_multihandle(CURLM *shephard_handle, std::unordered_map<CURL *, sheep> sheep_map);
+	void setup_easyhandle(CURL *&handle, std::string& response);
 	bool do_request(CURL* handle, std::string& base_url, std::string& response);
 	std::set<std::string> extract_links(std::string& base_url, std::string& response);
-	void slave_work(CURL *&handle,
+	void slave_work(CURLM *&shephard_handle,
 		std::queue<std::string>&,
 		std::mutex&,
 		std::vector<html_urls>&,

@@ -1,4 +1,5 @@
 #include "slave.hpp"
+#include "curl/multi.h"
 
 			
 slave::slave(slave_work doWork, 
@@ -10,7 +11,7 @@ slave::slave(slave_work doWork,
 	std::mutex& extractedLinks_Mtx,
 	std::condition_variable& cv)
 					:
-					worker(doWork, std::ref(handle), std::ref(taskQ), std::ref(taskMtx), std::ref(results), std::ref(resMtx), 
+					worker(doWork, std::ref(shephard_handle), std::ref(taskQ), std::ref(taskMtx), std::ref(results), std::ref(resMtx), 
 							std::ref(extractedLinks), std::ref(extractedLinks_Mtx), std::ref(cv))
 					//crazy desgin decision ikr
 
@@ -20,5 +21,5 @@ slave::~slave()
 {
 	if(worker.joinable())
 		worker.join();
-	curl_easy_cleanup(handle);
+	curl_multi_cleanup(shephard_handle);
 }

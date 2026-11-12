@@ -14,13 +14,15 @@ struct html_urls
 	std::string doc;
 };
 
+
+
 class slave 
 {
 private:
-	CURL *handle = nullptr;
+	CURLM *shephard_handle;
 	std::thread worker;
 public:
-	using slave_work = void (*)(CURL *&handle,
+	using slave_work = void (*)(CURLM *&shephard_handle,
 		std::queue<std::string>&,
 		std::mutex&,
 		std::vector<html_urls>&,
