@@ -33,7 +33,7 @@ namespace utlis
 		CURL *es_handle;
 		bool active;
 	};
-	constexpr int MAX_SHEEP = 200;
+	constexpr int MAX_SHEEP = 300;
 	constexpr int LOCAL_Q_SIZE = 1000;
 
 	inline std::atomic<unsigned int> count {0};

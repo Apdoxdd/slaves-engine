@@ -49,6 +49,7 @@ void utlis::setup_easyhandle(CURL *&handle, std::string& response)
 	curl_easy_setopt(handle, CURLOPT_FAILONERROR, 1L); // fail on 400 requests
 	curl_easy_setopt(handle, CURLOPT_FOLLOWLOCATION, 1L);
 	curl_easy_setopt(handle, CURLOPT_MAXREDIRS, 10L);
+	curl_easy_setopt(handle, CURLOPT_ACCEPT_ENCODING, "");
 }
 
 bool utlis::do_request(CURL *handle, std::string& base_url, std::string& response)
@@ -110,7 +111,7 @@ static bool has_blocked_extension(const std::string &path)
 
 static bool normalize_link(const CURLU *base, std::string href, std::string& out)
 {
-	auto first = href.find_first_not_of(" \t\r\n\f");
+	/*auto first = href.find_first_not_of(" \t\r\n\f");
 	if (first == std::string::npos)
 		return false;
 	auto last = href.find_last_not_of(" \t\r\n\f");
@@ -125,6 +126,7 @@ static bool normalize_link(const CURLU *base, std::string href, std::string& out
 	for (size_t pos = 0; (pos = href.find(' ', pos)) != std::string::npos; pos +=3)
 		href.replace(pos, 1, "%20");
 
+		*/
 	CURLU *u = curl_url_dup(base); //make a private copy of base
 	if (!u)
 		return false;
@@ -277,8 +279,8 @@ void utlis::slave_work(CURLM *&shephard_handle,
 			local_taskQ.push(task_url);
 
 		}
-		lk.unlock();
 		bool drained = taskQ.empty();
+		lk.unlock();
 		if (drained)
 			cv.notify_all();
 

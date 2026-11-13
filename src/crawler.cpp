@@ -4,7 +4,7 @@
 #include <stdexcept>
 
 crawler::crawler()
-	:slavesPool(std::thread::hardware_concurrency()) 
+	:slavesPool(1) 
 {
 	if (curl_global_init(CURL_GLOBAL_DEFAULT) != CURLE_OK)
     	{
@@ -62,7 +62,7 @@ void crawler::crawl()
 
 void crawler::get_links_db()
 {
-	constexpr size_t BATCH = 20'000;
+	constexpr size_t BATCH = 2000;
 	crawlerDBRead.clear();
 
 	std::vector<std::string> batch;
